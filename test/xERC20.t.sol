@@ -85,5 +85,7 @@ contract xERC20Test is Test {
         vm.prank(recipient);
         vm.expectRevert("xERC20: insufficient fee");
         token.xsend{value: insufficientFee}(destChainId, destContract, recipient, mintAmount);
+
+        assertEq(token.balanceOf(recipient), mintAmount, "Balance should remain unchanged");
     }
 }
