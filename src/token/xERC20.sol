@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "omni/contracts/src/pkg/XApp.sol";
@@ -17,6 +17,7 @@ contract xERC20 is ERC20, XApp {
         uint256 tokens
     ) external xrecv {
         require(isXCall(), "xERC20: only xcall");
+        require(xmsg.sender == address(this), "xERC20: only self xcall");
         _mint(account, tokens);
     }
 

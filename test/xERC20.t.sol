@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import {MockPortal} from "omni/contracts/test/utils/MockPortal.sol";
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {xERC20} from "../src/token/xERC20.sol";
 
 contract xERC20Test is Test {
@@ -28,16 +28,36 @@ contract xERC20Test is Test {
         uint64 sourceChainId = 100;
 
         // Use portal.mockXCall to simulate an xcall to token.xreceive(...)
-        portal.mockXCall(sourceChainId, address(this), address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
+        vm.prank(address(token));
+        portal.mockXCall(sourceChainId, address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
 
         assertEq(token.balanceOf(recipient), mintAmount, "Minted amount should match");
+    }
+
+    function testXReceiveNonXCallReverts() public {
+        // Attempt to call xreceive(...) without an xcall
+        vm.expectRevert("xERC20: only xcall");
+        token.xreceive(recipient, 1000);
+    }
+
+    function testXReceiveNonHolderReverts() public {
+        uint256 mintAmount = 1000 * 1e18;
+        uint64 sourceChainId = 100;
+        address sender = address(0xdead); // sender has no balance
+
+        // Use portal.mockXCall to simulate an xcall to token.xreceive(...) with a different recipient
+        vm.prank(sender);
+        vm.expectRevert("xERC20: only self xcall");
+        portal.mockXCall(sourceChainId, address(token), abi.encodeWithSignature("xreceive(address,uint256)", sender, mintAmount));
+        assertEq(token.balanceOf(sender), 0, "Sender should have no balance");
     }
 
     function testXSend() public payable {
         // First, simulate receiving tokens
         uint256 mintAmount = 1000 * 1e18;
         uint64 sourceChainId = 100;
-        portal.mockXCall(sourceChainId, address(this), address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
+        vm.prank(address(token));
+        portal.mockXCall(sourceChainId, address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
         assertEq(token.balanceOf(recipient), mintAmount, "Minted amount should match");
 
         // fund the recipient with some ether
@@ -65,12 +85,12 @@ contract xERC20Test is Test {
         assertEq(token.balanceOf(recipient), 0, "Balance after burn should be 0");
     }
 
-    // Test insufficient fee for xsend
     function testXSendInsufficientFeeReverts() public {
         // First, simulate receiving tokens
         uint256 mintAmount = 1000 * 1e18;
         uint64 sourceChainId = 100;
-        portal.mockXCall(sourceChainId, address(this), address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
+        vm.prank(address(token));
+        portal.mockXCall(sourceChainId, address(token), abi.encodeWithSignature("xreceive(address,uint256)", recipient, mintAmount));
         assertEq(token.balanceOf(recipient), mintAmount, "Minted amount should match");
 
         // fund the recipient with some ether
