@@ -28,7 +28,9 @@ contract xERC20 is ERC20, XApp {
         uint256 tokens
     ) external payable {
         require(balanceOf(msg.sender) >= tokens, "xERC20: insufficient balance");
+        _burn(msg.sender, tokens);
 
+        // prepare xcall data
         bytes memory data = abi.encodeWithSignature(
             "xreceive(address,uint256)",
             account,
@@ -41,6 +43,5 @@ contract xERC20 is ERC20, XApp {
 
         // send tokens to the contract on the destination chain
         xcall(destChainId, destContract, data);
-        _burn(msg.sender, tokens);
     }
 }
