@@ -4,15 +4,17 @@ pragma solidity ^0.8.25;
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "omni/contracts/src/pkg/XApp.sol";
 
-contract xERC20 is ERC20, XApp {
+contract OmniERC20 is ERC20, XApp {
     mapping(uint64 => address) public chainToContract;
     uint64[] public chainIds;
+    address public owner;
 
     constructor(
         string memory name,
         string memory symbol,
         address portal
     ) ERC20(name, symbol) XApp(portal) {
+        owner = msg.sender;
         _mint(msg.sender, 100000000 * 10 ** decimals()); // 100 million tokens
         // add this contract address to the mapping
         chainToContract[omni.chainId()] = address(this);
@@ -21,7 +23,7 @@ contract xERC20 is ERC20, XApp {
 
     /// @dev Set the address for a newly deployed contract on another chain
     function setChainAddress(uint64 chainId, address contractAddress) external payable {
-        require(msg.sender == address(this), "only owner");
+        require(msg.sender == owner, "only owner");
         _requireSufficientFee(chainId, contractAddress);
         _sendMappingCopy(chainId, contractAddress);
         chainToContract[chainId] = contractAddress;

@@ -6,8 +6,6 @@ import {Test, console} from "forge-std/Test.sol";
 import {xERC20} from "../src/token/xERC20.sol";
 
 contract xERC20Test is Test {
-    event TokensReceived(address indexed from, uint64 indexed fromChainId, address account, uint256 tokens);
-
     xERC20 token;
     MockPortal portal;
     address recipient = address(0x1);
@@ -17,7 +15,7 @@ contract xERC20Test is Test {
         token = new xERC20("Test Token", "TT", address(portal));
     }
 
-    function testConstructor() public {
+    function testConstructor() public view {
         assertEq(token.name(), "Test Token", "Name should match");
         assertEq(token.symbol(), "TT", "Symbol should match");
         assertEq(token.decimals(), 18, "Decimals should match");
