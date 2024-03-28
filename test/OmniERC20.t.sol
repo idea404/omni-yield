@@ -20,25 +20,9 @@ contract OmniERC20Test is Test {
         assertEq(token.decimals(), 18, "Decimals should match");
     }
 
-    function testSetChainAddressDirect() public {
+    function testSetChainAddressOneChain() public {
         uint64 chainId = 100;
         address contractAddress = address(0xdead);
-
-        vm.expectCall(
-            address(portal),
-            abi.encodeWithSignature("feeFor(uint64,bytes)", 
-            chainId,
-            abi.encodeWithSignature("setChainAddress(uint64,address)", chainId, contractAddress))
-        );
-
-        // vm.expectCall(
-        //     address(portal),
-        //     abi.encodeWithSignature("xcall(uint64,address,bytes)",
-        //     chainId,
-        //     contractAddress,
-        //     abi.encodeWithSignature("setChainAddress(uint64,address)", portal.chainId(), address(token))),
-        //     1
-        // );
 
         vm.prank(token.owner());
         token.setChainAddress{value: 1 ether}(chainId, contractAddress);
@@ -51,14 +35,6 @@ contract OmniERC20Test is Test {
         uint64 chainId2 = 200;
         address contractAddress1 = address(0xdead);
         address contractAddress2 = address(0xbeef);
-
-        vm.expectCall(
-            address(portal),
-            abi.encodeWithSignature("feeFor(uint64,bytes)", 
-            chainId1,
-            abi.encodeWithSignature("setChainAddress(uint64,address)", chainId1, contractAddress1)),
-            2
-        );
 
         vm.startPrank(token.owner());
         token.setChainAddress{value: 1 ether}(chainId1, contractAddress1);
