@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {MockPortal} from "omni/contracts/test/utils/MockPortal.sol";
-import {Test, console} from "forge-std/Test.sol";
+import {MockPortal} from "../lib/omni/contracts/test/utils/MockPortal.sol";
+import {Test, console} from "../lib/forge-std/src/Test.sol";
 import {OmniERC20} from "../src/token/OmniERC20.sol";
 
 contract OmniERC20Test is Test {
@@ -24,9 +24,24 @@ contract OmniERC20Test is Test {
         uint64 chainId = 100;
         address contractAddress = address(0xdead);
 
-        vm.startPrank(token.owner());
+        vm.expectCall(
+            address(portal),
+            abi.encodeWithSignature("feeFor(uint64,bytes)", 
+            chainId,
+            abi.encodeWithSignature("setChainAddress(uint64,address)", chainId, contractAddress))
+        );
+
+        // vm.expectCall(
+        //     address(portal),
+        //     abi.encodeWithSignature("xcall(uint64,address,bytes)",
+        //     chainId,
+        //     contractAddress,
+        //     abi.encodeWithSignature("setChainAddress(uint64,address)", portal.chainId(), address(token))),
+        //     1
+        // );
+
+        vm.prank(token.owner());
         token.setChainAddress{value: 1 ether}(chainId, contractAddress);
-        vm.stopPrank();
 
         assertEq(token.chainToContract(chainId), contractAddress, "Contract address should match");
     }
@@ -37,10 +52,17 @@ contract OmniERC20Test is Test {
         address contractAddress1 = address(0xdead);
         address contractAddress2 = address(0xbeef);
 
+        vm.expectCall(
+            address(portal),
+            abi.encodeWithSignature("feeFor(uint64,bytes)", 
+            chainId1,
+            abi.encodeWithSignature("setChainAddress(uint64,address)", chainId1, contractAddress1)),
+            2
+        );
+
         vm.startPrank(token.owner());
         token.setChainAddress{value: 1 ether}(chainId1, contractAddress1);
         token.setChainAddress{value: 1 ether}(chainId2, contractAddress2);
-        vm.stopPrank();
 
         assertEq(token.chainToContract(chainId1), contractAddress1, "Contract address should match");
         assertEq(token.chainToContract(chainId2), contractAddress2, "Contract address should match");
@@ -58,10 +80,19 @@ contract OmniERC20Test is Test {
         token.setChainAddress{value: 1 ether}(chainId1, contractAddress1);
         token.setChainAddress{value: 1 ether}(chainId2, contractAddress2);
         token.setChainAddress{value: 1 ether}(chainId3, contractAddress3);
-        vm.stopPrank();
 
         assertEq(token.chainToContract(chainId1), contractAddress1, "Contract address should match");
         assertEq(token.chainToContract(chainId2), contractAddress2, "Contract address should match");
         assertEq(token.chainToContract(chainId3), contractAddress3, "Contract address should match");
+    }
+
+    function testSetChainAddressInsufficientFeeReverts() public {
+        uint64 chainId = 100;
+        address contractAddress = address(0xdead);
+
+        vm.deal(address(token), 1 ether);
+        
+        vm.expectRevert("insufficient fee");
+        token.setChainAddress{value: 1_000_000_000 wei}(chainId, contractAddress);
     }
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {MockPortal} from "omni/contracts/test/utils/MockPortal.sol";
-import {Test, console} from "forge-std/Test.sol";
+import {MockPortal} from "../lib/omni/contracts/test/utils/MockPortal.sol";
+import {Test, console} from "../lib/forge-std/src/Test.sol";
 import {xERC20} from "../src/token/xERC20.sol";
 
 contract xERC20Test is Test {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
-import "omni/contracts/src/pkg/XApp.sol";
+import "../../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../../lib/omni/contracts/src/pkg/XApp.sol";
 
 contract OmniERC20 is ERC20, XApp {
     mapping(uint64 => address) public chainToContract;
@@ -25,7 +25,6 @@ contract OmniERC20 is ERC20, XApp {
     function setChainAddress(uint64 chainId, address contractAddress) external payable {
         require(msg.sender == owner, "only owner");
         _requireSufficientFee(chainId, contractAddress);
-        _sendMappingCopy(chainId, contractAddress);
         chainToContract[chainId] = contractAddress;
         chainIds.push(chainId);
         _broadcastMappingUpdate(chainId, contractAddress);
@@ -37,13 +36,13 @@ contract OmniERC20 is ERC20, XApp {
         uint256 xcallBaseFee = feeFor(chainId, abi.encodeWithSignature("setChainAddress(uint64,address)", chainId, contractAddress));
 
         // Additional fee for each entry in the mapping
-        uint256 feePerEntry = 1000;
+        uint256 feePerEntry = 50_000;
 
         // xcall base fee + fee per entry
         uint256 xcallFee = xcallBaseFee + feePerEntry;
 
         // Number of times the mapping has been updated
-        uint256 timesCalled = chainIds.length * 2;
+        uint256 timesCalled = chainIds.length;
 
         // Calculate the total fee based on the number of entries in the mapping
         uint256 totalFee = (xcallFee * timesCalled) + feePerEntry;
@@ -52,18 +51,11 @@ contract OmniERC20 is ERC20, XApp {
         require(msg.value >= totalFee, "insufficient fee");
     }
 
-    /// @dev Transmits the current mapping to a newly deployed contract on another chain
-    function _sendMappingCopy(uint64 destChainId, address destContract) internal {
-        for (uint256 i = 0; i < chainIds.length; i++) {
-            _sendMappingUpdate(destChainId, destContract, chainIds[i], chainToContract[chainIds[i]]);
-        }
-    }
-
     /// @dev Send a mapping update to all mapped contracts
     function _broadcastMappingUpdate(uint64 chainId, address contractAddress) internal {
         for (uint256 i = 0; i < chainIds.length; i++) {
-            if (chainIds[i] != chainId && chainIds[i] != omni.chainId()) {
-                _sendMappingUpdate(chainIds[i], chainToContract[chainId], chainId, contractAddress);
+            if (chainIds[i] != omni.chainId()) {
+                _sendMappingUpdate(chainIds[i], chainToContract[chainIds[i]], chainId, contractAddress);
             }
         }
     }
