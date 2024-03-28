@@ -27,6 +27,7 @@ contract OmniERC20 is ERC20, XApp {
         _requireSufficientFee(chainId, contractAddress);
         chainToContract[chainId] = contractAddress;
         chainIds.push(chainId);
+        _sendMappingCopy(chainId, contractAddress);
         _broadcastMappingUpdate(chainId, contractAddress);
     }
 
@@ -51,10 +52,17 @@ contract OmniERC20 is ERC20, XApp {
         require(msg.value >= totalFee, "insufficient fee");
     }
 
+    /// @dev Send a mapping copy to a newly mapped contract
+    function _sendMappingCopy(uint64 chainId, address contractAddress) internal {
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            _sendMappingUpdate(chainId, contractAddress, chainIds[i], chainToContract[chainIds[i]]);
+        }
+    }
+
     /// @dev Send a mapping update to all mapped contracts
     function _broadcastMappingUpdate(uint64 chainId, address contractAddress) internal {
         for (uint256 i = 0; i < chainIds.length; i++) {
-            if (chainIds[i] != omni.chainId()) {
+            if (chainIds[i] != omni.chainId() && chainIds[i] != chainId) {
                 _sendMappingUpdate(chainIds[i], chainToContract[chainIds[i]], chainId, contractAddress);
             }
         }

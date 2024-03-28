@@ -24,6 +24,33 @@ contract OmniERC20Test is Test {
         uint64 chainId = 100;
         address contractAddress = address(0xdead);
 
+        vm.expectCall(
+            address(portal),
+            abi.encodeWithSignature(
+                "feeFor(uint64,bytes)", 
+                chainId, 
+                abi.encodeWithSignature(
+                    "setChainAddress(uint64,address)", 
+                    chainId, 
+                    contractAddress
+                )
+            )
+        );
+
+        vm.expectCall(
+            address(portal),
+            abi.encodeWithSignature(
+                "xcall(uint64,address,bytes)",
+                chainId, 
+                contractAddress,
+                abi.encodeWithSignature(
+                    "setChainAddress(uint64,address)", 
+                    portal.chainId(), 
+                    address(token)
+                )
+            )
+        );
+
         vm.prank(token.owner());
         token.setChainAddress{value: 1 ether}(chainId, contractAddress);
 
