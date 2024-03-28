@@ -40,10 +40,10 @@ contract xERC20Test is Test {
         token.xreceive(recipient, 1000);
     }
 
-    function testXReceiveNonHolderReverts() public {
+    function testXReceiveNonTokenAccountReverts() public {
         uint256 mintAmount = 1000 * 1e18;
         uint64 sourceChainId = 100;
-        address sender = address(0xdead); // sender has no balance
+        address sender = address(0xdead); // sender has no token balance
 
         // Use portal.mockXCall to simulate an xcall to token.xreceive(...) with a different recipient
         vm.prank(sender);
