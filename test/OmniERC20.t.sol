@@ -30,4 +30,38 @@ contract OmniERC20Test is Test {
 
         assertEq(token.chainToContract(chainId), contractAddress, "Contract address should match");
     }
+
+    function testSetChainAddressTwoChains() public {
+        uint64 chainId1 = 100;
+        uint64 chainId2 = 200;
+        address contractAddress1 = address(0xdead);
+        address contractAddress2 = address(0xbeef);
+
+        vm.startPrank(token.owner());
+        token.setChainAddress{value: 1 ether}(chainId1, contractAddress1);
+        token.setChainAddress{value: 1 ether}(chainId2, contractAddress2);
+        vm.stopPrank();
+
+        assertEq(token.chainToContract(chainId1), contractAddress1, "Contract address should match");
+        assertEq(token.chainToContract(chainId2), contractAddress2, "Contract address should match");
+    }
+
+    function testSetChainAddressThreeChains() public {
+        uint64 chainId1 = 100;
+        uint64 chainId2 = 200;
+        uint64 chainId3 = 300;
+        address contractAddress1 = address(0xdead);
+        address contractAddress2 = address(0xbeef);
+        address contractAddress3 = address(0xcafe);
+
+        vm.startPrank(token.owner());
+        token.setChainAddress{value: 1 ether}(chainId1, contractAddress1);
+        token.setChainAddress{value: 1 ether}(chainId2, contractAddress2);
+        token.setChainAddress{value: 1 ether}(chainId3, contractAddress3);
+        vm.stopPrank();
+
+        assertEq(token.chainToContract(chainId1), contractAddress1, "Contract address should match");
+        assertEq(token.chainToContract(chainId2), contractAddress2, "Contract address should match");
+        assertEq(token.chainToContract(chainId3), contractAddress3, "Contract address should match");
+    }
 }
