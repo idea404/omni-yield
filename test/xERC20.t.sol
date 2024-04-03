@@ -12,7 +12,7 @@ contract xERC20Test is Test {
 
     function setUp() public {
         portal = new MockPortal();
-        token = new xERC20("Test Token", "TT", address(portal));
+        token = new xERC20("Test Token", "TT", address(portal), address(0xb055));
     }
 
     function testConstructor() public view {
